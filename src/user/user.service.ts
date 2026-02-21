@@ -1,4 +1,5 @@
-mport { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { UserDTO } from './user.dto';
  
 @Injectable()
 export class UserService {
@@ -6,16 +7,20 @@ export class UserService {
     return { message: 'Searching for service' + name, results: [] };
   }
  
-  createAccount(data: object): object {
+  createAccount(data: UserDTO ): object {
     return { message: 'your account created', userData: data };
   }
  
-  updateProfile(id: number, info: object): object {
+  updateProfile(id: number, info: UserDTO ): object {
     return { id: id, message: 'Profile updated', updatedData: info };
   }
  
   addToCart(cartData: object): object {
     return { message: 'Service added to your booking list', cart: cartData };
+  }
+  
+  uploadDocument(filename: string): object {
+    return { message: 'PDF Document uploaded successfully', file: filename };
   }
  
   cancelService(bookingId: number): object {

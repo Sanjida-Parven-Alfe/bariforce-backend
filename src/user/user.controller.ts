@@ -7,9 +7,17 @@ import {
   Param,
   Query,
   Body,
+  ParseIntPipe,
+  UseInterceptors, 
+  UploadedFile
+  
 } from '@nestjs/common';
 import { UserService } from './user.service';
- 
+ import { UserDTO} from './user.dto';
+ import { FileInterceptor } from '@nestjs/platform-express';
+import { MulterError, diskStorage } from 'multer';
+import { extname } from 'path';
+
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -20,13 +28,33 @@ export class UserController {
   }
  
   @Post('signup')
-  createAccount(@Body() data: object): object {
+  createAccount(@Body() data: UserDTO): object {
     return this.userService.createAccount(data);
   }
  
   @Put('update-profile/:id')
-  updateProfile(@Param('id') id: number, @Body() info: object): object {
+  updateProfile(@Param('id', ParseIntPipe) id: number, @Body() info: UserDTO): object {
     return this.userService.updateProfile(id, info);
+  }
+
+  @Post('upload-document')
+  @UseInterceptors(FileInterceptor('file', {
+    fileFilter: (req, file, cb) => {
+      if (file.originalname.match(/^.*\.(pdf)$/)) 
+        cb(null, true);
+      else
+        cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'pdf'), false);
+    },
+    limits: { fileSize: 2000000 }, 
+    storage: diskStorage({
+      destination: './uploads/docs',
+      filename: (req, file, cb) => {
+        cb(null, Date.now() + extname(file.originalname));
+      },
+    }),
+  }))
+  uploadDocument(@UploadedFile() file: Express.Multer.File): object {
+    return this.userService.uploadDocument(file.filename);
   }
  
   @Post('add-to-cart')
