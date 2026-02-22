@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AdminDTO } from './admin.dto';
 
 @Injectable()
 export class AdminService {
@@ -16,11 +17,17 @@ export class AdminService {
     return { name: name, id: id };
   }
 
-  addAdmin(mydata: object): object {
+  addAdmin(mydata: AdminDTO): object {
     return { message: 'Data Received', data: mydata };
   }
 
-  updateAdmin(id: number, mydata: object): object {
+  uploadNID(filename: string): object {
+    return {
+      message: 'NID image uploaded successfully (Under 2MB)',
+      file: filename,
+    };
+  }
+  updateAdmin(id: number, mydata: AdminDTO): object {
     return { id: id, updatedData: mydata };
   }
 

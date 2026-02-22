@@ -7,8 +7,15 @@ import {
   Body,
   Put,
   Delete,
+  UseInterceptors,
+  UploadedFile,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
+import { AdminDTO } from './admin.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { MulterError, diskStorage } from 'multer';
+import { extname } from 'path';
 
 @Controller('admin')
 export class AdminController {
@@ -25,7 +32,7 @@ export class AdminController {
   }
 
   @Get('find/:id')
-  getAdminByID(@Param('id') id: number): object {
+  getAdminByID(@Param('id', ParseIntPipe) id: number): object {
     console.log(typeof id);
     return this.adminService.getAdminByID(id);
   }
@@ -36,17 +43,40 @@ export class AdminController {
   }
 
   @Post('add')
-  addAdmin(@Body() mydata: object): object {
+  addAdmin(@Body() mydata: AdminDTO): object {
     return this.adminService.addAdmin(mydata);
   }
 
+  @Post('upload-nid')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: (req, file, cb) => {
+        if (file.originalname.match(/^.*\.(jpg|png|jpeg)$/)) cb(null, true);
+        else cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'image'), false);
+      },
+      limits: { fileSize: 2000000 },
+      storage: diskStorage({
+        destination: './uploads/nid',
+        filename: (req, file, cb) => {
+          cb(null, Date.now() + extname(file.originalname));
+        },
+      }),
+    }),
+  )
+  uploadNID(@UploadedFile() file: Express.Multer.File): object {
+    return this.adminService.uploadNID(file.filename);
+  }
+
   @Put('update/:id')
-  updateAdmin(@Param('id') id: number, @Body() mydata: object): object {
+  updateAdmin(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() mydata: AdminDTO,
+  ): object {
     return this.adminService.updateAdmin(id, mydata);
   }
 
   @Delete('delete/:id')
-  deleteAdmin(@Param('id') id: number): object {
+  deleteAdmin(@Param('id', ParseIntPipe) id: number): object {
     return this.adminService.deleteAdmin(id);
   }
 }
