@@ -1,23 +1,26 @@
 import {
   IsString,
-  IsEmail,
-  Matches,
+  IsInt,
+  Min,
+  MaxLength,
   IsNotEmpty,
-  IsNumberString,
-  Length,
+  IsIn,
 } from 'class-validator';
 
 export class AdminDTO {
   @IsString()
   @IsNotEmpty()
-  @Matches(/^[a-zA-Z ]*$/, { message: 'Name must contain only alphabets' })
-  name: string;
+  @MaxLength(100, { message: 'Full name cannot exceed 100 characters' })
+  fullName: string;
 
-  @IsEmail()
-  @Matches(/@.*\.xyz$/, { message: 'Email must be from .xyz domain' })
-  email: string;
+  @IsInt()
+  @Min(0, { message: 'Age must be a positive number' })
+  age: number;
 
-  @IsNumberString({}, { message: 'NID must contain only numbers' })
-  @Length(10, 17, { message: 'NID must be between 10 to 17 digits' })
-  nid: string;
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(['active', 'inactive'], {
+    message: 'Status must be either active or inactive',
+  })
+  status: string;
 }
