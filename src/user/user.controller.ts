@@ -1,49 +1,47 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Param,
-  Query,
-  Body,
-  ParseIntPipe,
-  UseInterceptors, 
-  UploadedFile
-  
+import { 
+  Controller, Post, Body, Get, Query, Param, Delete, UseInterceptors, UploadedFile 
 } from '@nestjs/common';
 import { UserService } from './user.service';
- import { UserDTO} from './user.dto';
- import { FileInterceptor } from '@nestjs/platform-express';
+import { UserDTO } from './user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { MulterError, diskStorage } from 'multer';
 import { extname } from 'path';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
- 
-  @Get('search-service')
-  searchService(@Query('name') name: string): object {
-    return this.userService.searchService(name);
-  }
- 
+
+
   @Post('signup')
-  createAccount(@Body() data: UserDTO): object {
+  createAccount(@Body() data: UserDTO) {
     return this.userService.createAccount(data);
   }
- 
-  @Put('update-profile/:id')
-  updateProfile(@Param('id', ParseIntPipe) id: number, @Body() info: UserDTO): object {
-    return this.userService.updateProfile(id, info);
+
+
+  @Get('search')
+  findByName(@Query('name') name: string) {
+    return this.userService.findByNameSubstring(name);
   }
+
+  
+  @Get('profile/:username')
+  getProfile(@Param('username') username: string) {
+    return this.userService.findByUsername(username);
+  }
+
+ 
+ @Delete('remove/:username')
+removeUser(@Param('username') username: string) {
+  
+  return this.userService.removeByUsername(username);
+}
+
 
   @Post('upload-document')
   @UseInterceptors(FileInterceptor('file', {
     fileFilter: (req, file, cb) => {
-      if (file.originalname.match(/^.*\.(pdf)$/)) 
-        cb(null, true);
-      else
-        cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'pdf'), false);
+      if (file.originalname.match(/^.*\.(pdf)$/)) cb(null, true);
+      else cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'pdf'), false);
     },
     limits: { fileSize: 2000000 }, 
     storage: diskStorage({
@@ -53,17 +51,7 @@ export class UserController {
       },
     }),
   }))
-  uploadDocument(@UploadedFile() file: Express.Multer.File): object {
+  uploadDocument(@UploadedFile() file: Express.Multer.File) {
     return this.userService.uploadDocument(file.filename);
-  }
- 
-  @Post('add-to-cart')
-  addToCart(@Body() cartData: object): object {
-    return this.userService.addToCart(cartData);
-  }
- 
-  @Delete('cancel-service/:id')
-  cancelService(@Param('id') id: number): object {
-    return this.userService.cancelService(id);
   }
 }

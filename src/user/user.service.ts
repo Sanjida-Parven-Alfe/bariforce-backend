@@ -1,32 +1,46 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, Like } from 'typeorm'; // Like ইম্পোর্ট নিশ্চিত করো
+import { UserEntity } from './user.entity';
 import { UserDTO } from './user.dto';
- 
+
 @Injectable()
 export class UserService {
-  searchService(name: string): object {
-    return { message: 'Searching for service' + name, results: [] };
+  constructor(
+    @InjectRepository(UserEntity)
+    private userRepo: Repository<UserEntity>,
+  ) {}
+
+  
+  async createAccount(data: UserDTO): Promise<UserEntity> {
+    return await this.userRepo.save(data);
   }
- 
-  createAccount(data: UserDTO ): object {
-    return { message: 'your account created', userData: data };
+
+  
+  async searchByFullName(namePart: string): Promise<UserEntity[]> {
+    return await this.userRepo.find({
+      where: { fullName: Like(`%${namePart}%`) },
+    });
   }
- 
-  updateProfile(id: number, info: UserDTO ): object {
-    return { id: id, message: 'Profile updated', updatedData: info };
+
+  
+ async findByNameSubstring(namePart: string): Promise<UserEntity[]> {
+    return await this.userRepo.find({
+      where: { 
+        fullName: Like(`%${namePart}%`) 
+      },
+    });
   }
- 
-  addToCart(cartData: object): object {
-    return { message: 'Service added to your booking list', cart: cartData };
+  async findByUsername(uname: string): Promise<UserEntity | null> {
+    return await this.userRepo.findOneBy({ username: uname });
   }
   
-  uploadDocument(filename: string): object {
-    return { message: 'PDF Document uploaded successfully', file: filename };
+  async removeByUsername(uname: string): Promise<any> {
+    return await this.userRepo.delete({ username: uname });
   }
- 
-  cancelService(bookingId: number): object {
-    return {
-      bookingId: bookingId,
-      message: 'Your service booking has been cancelled.',
-    };
+
+  
+  uploadDocument(filename: string) {
+    return { message: 'Uploaded', file: filename };
   }
 }
