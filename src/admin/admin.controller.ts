@@ -6,6 +6,7 @@ import {
   Post,
   Body,
   Put,
+  Patch,
   Delete,
   UseInterceptors,
   UploadedFile,
@@ -47,6 +48,24 @@ export class AdminController {
     return this.adminService.addAdmin(mydata);
   }
 
+  @Patch('status/:id')
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: string,
+  ) {
+    return this.adminService.changeStatus(id, status);
+  }
+
+  @Get('inactive')
+  getInactive() {
+    return this.adminService.getInactiveAdmins();
+  }
+
+  @Get('older-than-40')
+  getOlder() {
+    return this.adminService.getOlderAdmins();
+  }
+
   @Post('upload-nid')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -66,7 +85,6 @@ export class AdminController {
   uploadNID(@UploadedFile() file: Express.Multer.File): object {
     return this.adminService.uploadNID(file.filename);
   }
-
   @Put('update/:id')
   updateAdmin(
     @Param('id', ParseIntPipe) id: number,
