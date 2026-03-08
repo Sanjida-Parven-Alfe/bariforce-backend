@@ -13,7 +13,7 @@ import { AdminEntity } from './admin/admin.entity';
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: '184199',
+      password: process.env.DB_PASSWORD,
       database: 'bariforce_db',
       entities: [AdminEntity],
       synchronize: true,
