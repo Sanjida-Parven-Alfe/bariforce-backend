@@ -19,6 +19,7 @@ export class AppModule { } */
   imports: [
     UserModule,
     AdminModule,
+    workerModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',              
