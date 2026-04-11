@@ -1,34 +1,39 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { workerModule } from './worker/worker.module';
-import { Worker } from './worker/worker.entity';
-import { UserModule } from './user/user.module';
 import { AdminModule } from './admin/admin.module';
 import { AdminEntity } from './admin/admin.entity';
-/*
-@Module({
-  imports: [workerModule],
-  controllers: [],
-  providers: [],
-})
-   /*entities: [Worker],
-export class AppModule { } */
-
+import { AdminProfileEntity } from './admin/adminprofile.entity';
+import { AdminActivityEntity } from './admin/adminactivity.entity';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
-    UserModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        port: 465,
+        ignoreTLS: true,
+        secure: true,
+        auth: {
+          user: 'youremail@gmail.com',
+          pass: 'yourpassword',
+        },
+      },
+    }),
     AdminModule,
-    workerModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',              
+      host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: '97358',               
-      database: 'webtech',             
-      entities: [Worker, AdminEntity], 
-      synchronize: true,               
+      password: process.env.DB_PASSWORD,
+      database: 'bariforce_db',
+      entities: [AdminEntity, AdminProfileEntity, AdminActivityEntity],
+      synchronize: true,
       autoLoadEntities: true,
     }),
   ],
