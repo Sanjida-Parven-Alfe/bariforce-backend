@@ -1,22 +1,25 @@
-import { Entity, PrimaryColumn, Column, BeforeInsert } from 'typeorm';
-
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, OneToMany } from 'typeorm';
+import { UserProfileEntity } from './userprofile.entity';
+import { BookingEntity } from './booking.entity';
+ 
 @Entity('users')
 export class UserEntity {
-  @PrimaryColumn() 
-  id: string;
-
-  @Column({ length: 100, unique: true })
-  username: string;
-
-  @Column({ length: 150 }) 
-  fullName: string;
-
-  @Column({ default: false })
-  isActive: boolean;
-
-  @BeforeInsert()
-  generateId() {
-   
-    this.id = 'USER-' + Math.floor(Math.random() * 10000);
-  }
+  @PrimaryGeneratedColumn({ unsigned: true })
+  id: number;
+ 
+  @Column({ length: 100 })
+  name: string;
+ 
+  @Column({ unique: true })
+  email: string;
+ 
+  @Column()
+  password: string;
+ 
+  @OneToOne(() => UserProfileEntity, profile => profile.user, { cascade: true })
+  @JoinColumn()
+  profile: UserProfileEntity;
+ 
+  @OneToMany(() => BookingEntity, booking => booking.user, { cascade: true })
+  bookings: BookingEntity[];
 }
