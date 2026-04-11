@@ -1,12 +1,13 @@
 import { Injectable, HttpException, HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { UserDTO } from './user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { UserProfileEntity } from './userprofile.entity';
 import { BookingEntity } from './booking.entity';
 import * as bcrypt from 'bcrypt';
 import { MailerService } from '@nestjs-modules/mailer';
+import { JwtService } from '@nestjs/jwt';
  
 @Injectable()
 export class UserService {
@@ -18,10 +19,15 @@ export class UserService {
     @InjectRepository(BookingEntity)
     private bookingRepo: Repository<BookingEntity>,
     private mailerService: MailerService,
+    private jwtService: JwtService,
   ) {}
  
   async searchService(name: string): Promise<object> {
-    return { message: 'Searching for service: ' + name, results: [] };
+    const results = await this.bookingRepo.find({
+      where: { serviceName: Like(`%${name}%`) },
+      relations: ['user'],
+    });
+    return { message: 'Searching for service: ' + name, results };
   }
  
   async createAccount(data: UserDTO): Promise<UserEntity> {
@@ -56,16 +62,21 @@ export class UserService {
     return savedUser;
   }
  
-  async signin(email: string, pass: string): Promise<boolean> {
+  async signin(email: string, pass: string): Promise<any> {
     if (email && pass) {
       const user = await this.userRepo.findOneBy({ email });
       if (!user) {
         throw new UnauthorizedException('Invalid credentials');
       }
       const isMatch = await bcrypt.compare(pass, user.password);
-      return isMatch;
+      if (isMatch) {
+        const payload = { sub: user.id, email: user.email };
+        return { access_token: await this.jwtService.signAsync(payload) };
+      } else {
+        throw new UnauthorizedException('Invalid credentials');
+      }
     }
-    return false;
+    throw new UnauthorizedException('Invalid credentials');
   }
  
   async updateProfile(id: number, info: Partial<UserDTO>): Promise<object> {
@@ -128,6 +139,16 @@ export class UserService {
       bookingId: bookingId,
       message: 'Your service booking has been cancelled.',
     };
+  }
+ 
+  async updateBookingStatus(bookingId: number, status: string): Promise<object> {
+    const booking = await this.bookingRepo.findOneBy({ id: bookingId });
+    if (!booking) {
+      throw new HttpException('Booking not found', HttpStatus.NOT_FOUND);
+    }
+    booking.status = status;
+    const updated = await this.bookingRepo.save(booking);
+    return { message: 'Booking status updated successfully', booking: updated };
   }
  
   async getUserBookings(userId: number): Promise<BookingEntity[]> {

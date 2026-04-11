@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Param,
   Query,
@@ -11,7 +12,7 @@ import {
   UseInterceptors,
   UploadedFile,
   UseGuards,
-  Session,
+  UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -19,7 +20,7 @@ import { UserDTO } from './user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MulterError, diskStorage } from 'multer';
 import { extname } from 'path';
-import { SessionGuard } from './session.guard';
+import { AuthGuard } from './auth.guard';
  
 @Controller('user')
 export class UserController {
@@ -37,31 +38,17 @@ export class UserController {
  
   @Post('signin')
   async signin(
-    @Session() session: Record<string, any>,
     @Body('email') email: string,
     @Body('password') pass: string,
   ) {
-    const isMatch = await this.userService.signin(email, pass);
-    if (isMatch) {
-      session.email = email;
-      return { message: 'Logged in successfully' };
-    } else {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-  }
- 
-  @Get('signout')
-  signout(@Session() session: Record<string, any>) {
-    session.destroy((err) => {
-      if (err) throw new UnauthorizedException('Logout failed');
-    });
-    return { message: 'Logged out successfully' };
+    const result = await this.userService.signin(email, pass);
+    return { message: 'Logged in successfully', access_token: result.access_token };
   }
  
   // To simulate authenticated user we would use SessionGuard and grab user info from Session
   // For the sake of matching your frontend parameters, we still accept ID from path here:
   @Put('update-profile/:id')
-  @UseGuards(SessionGuard)
+  @UseGuards(AuthGuard)
   updateProfile(
     @Param('id', ParseIntPipe) id: number,
     @Body() info: Partial<UserDTO>,
@@ -70,7 +57,7 @@ export class UserController {
   }
  
   @Post('upload-document')
-  @UseGuards(SessionGuard)
+  @UseGuards(AuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       fileFilter: (req, file, cb) => {
@@ -91,13 +78,22 @@ export class UserController {
   }
  
   @Post('add-to-cart/:userId')
-  @UseGuards(SessionGuard)
+  @UseGuards(AuthGuard)
   addToCart(@Param('userId', ParseIntPipe) userId: number, @Body() cartData: object): object {
     return this.userService.addToCart(userId, cartData);
   }
  
+  @Patch('update-booking-status/:bookingId')
+  @UseGuards(AuthGuard)
+  updateBookingStatus(
+    @Param('bookingId', ParseIntPipe) bookingId: number,
+    @Body('status') status: string,
+  ): object {
+    return this.userService.updateBookingStatus(bookingId, status);
+  }
+ 
   @Delete('cancel-service/:userId/:bookingId')
-  @UseGuards(SessionGuard)
+  @UseGuards(AuthGuard)
   cancelService(
     @Param('bookingId', ParseIntPipe) bookingId: number,
     @Param('userId', ParseIntPipe) userId: number,
@@ -106,7 +102,7 @@ export class UserController {
   }
  
   @Get('bookings/:userId')
-  @UseGuards(SessionGuard)
+  @UseGuards(AuthGuard)
   getUserBookings(@Param('userId', ParseIntPipe) userId: number): object {
     return this.userService.getUserBookings(userId);
   }
