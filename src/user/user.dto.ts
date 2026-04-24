@@ -1,19 +1,18 @@
-import { IsString, Matches, MinLength, IsNotEmpty } from 'class-validator';
- 
-export class UserDTO {
-   
-    @IsString()
-    @IsNotEmpty()
-    @Matches(/^[a-zA-Z0-9 ]*$/, { message: 'Name must not contain special characters' })
-    name: string;
+import { IsString, IsNotEmpty, MaxLength, IsBoolean, IsOptional } from 'class-validator';
 
-    @MinLength(6)
-    @Matches(/[a-z]/, { message: 'Password must contain at least one lowercase letter' })
-    password: string;
-     
-    @Matches(/^01/, { message: 'Phone number must start with 01' })
-    phone: string;
- 
-    @IsString()
-    address: string;
+export class UserDTO {
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  username: string;
+ @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  fullName: string;
+@IsOptional()
+@IsString()
+password?: string;
+  @IsOptional()
+  @IsBoolean()
+  isActive: boolean;
 }

@@ -1,29 +1,26 @@
-import { Entity, Column, PrimaryColumn,PrimaryGeneratedColumn ,BeforeInsert ,Check} from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
+import { UserEntity } from '../user/user.entity';
+import { AdminEntity } from '../admin/admin.entity';
 
 @Entity()
-@Check(`"phone" > 0`) 
 export class Worker {
+
   @PrimaryGeneratedColumn()
   id: number;
-  @Column({ default: true })
-  isActive: boolean;
 
   @Column({ nullable: true })
   fullname: string;
 
-  /*@Column({ name: 'full_name', nullable: true })
-  fullName: string
-   @Column({ unique: true })
-  email: string;
-  @Column({ type: 'varchar', length: 50 })
-  name: string;
-  ;*/
-  
-  @Column({ type: 'bigint', unsigned: true })
+  @Column({ type: 'bigint' })
   phone: string;
 
-  @BeforeInsert()
-  generateId() {
-    this.id = Math.floor(Math.random() * 100);
-  }
+  @Column({ default: true })
+  isActive: boolean;
+
+  //Many Worker → One User
+  @ManyToOne(() => UserEntity, (user) => user.workers) 
+  //One Worker → One Admin
+  @OneToOne(() => AdminEntity)
+  @JoinColumn()
+  admin: AdminEntity;
 }
