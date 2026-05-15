@@ -11,12 +11,15 @@ import {
   UseInterceptors,
   UploadedFile,
   ParseIntPipe,
+  UseGuards,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AdminDTO } from './admin.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MulterError, diskStorage } from 'multer';
 import { extname } from 'path';
+import { AuthGuard } from './auth.guard';
 
 @Controller('admin')
 export class AdminController {
@@ -34,12 +37,11 @@ export class AdminController {
 
   @Get('find/:id')
   getAdminByID(@Param('id', ParseIntPipe) id: number): object {
-    console.log(typeof id);
     return this.adminService.getAdminByID(id);
   }
 
   @Get('search')
-  searchAdmin(@Query('name') name: string, @Query('id') id: number): object {
+  async searchAdmin(@Query('name') name: string, @Query('id') id: number): Promise<object> {
     return this.adminService.searchAdmin(name, id);
   }
 
@@ -48,7 +50,23 @@ export class AdminController {
     return this.adminService.addAdmin(mydata);
   }
 
+  @Post('signup')
+  signup(@Body() mydata: AdminDTO): object {
+    return this.adminService.addAdmin(mydata);
+  }
+
+  @Post('signin')
+  async signin(@Body() mydto: Partial<AdminDTO>) {
+    return await this.adminService.signin(mydto);
+  }
+
+  @Get('signout')
+  signout() {
+    return { message: "logged out (destroy token on client side)" };
+  }
+
   @Patch('status/:id')
+  @UseGuards(AuthGuard)
   updateStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body('status') status: string,
@@ -85,7 +103,9 @@ export class AdminController {
   uploadNID(@UploadedFile() file: Express.Multer.File): object {
     return this.adminService.uploadNID(file.filename);
   }
+
   @Put('update/:id')
+  @UseGuards(AuthGuard)
   updateAdmin(
     @Param('id', ParseIntPipe) id: number,
     @Body() mydata: AdminDTO,
@@ -94,7 +114,26 @@ export class AdminController {
   }
 
   @Delete('delete/:id')
+  @UseGuards(AuthGuard)
   deleteAdmin(@Param('id', ParseIntPipe) id: number): object {
     return this.adminService.deleteAdmin(id);
+  }
+
+  @Post('activity/:adminId')
+  @UseGuards(AuthGuard)
+  addActivity(@Param('adminId', ParseIntPipe) adminId: number, @Body('action') action: string) {
+    return this.adminService.addAdminActivity(adminId, action);
+  }
+
+  @Get('activities/:adminId')
+  @UseGuards(AuthGuard)
+  getActivities(@Param('adminId', ParseIntPipe) adminId: number) {
+    return this.adminService.getAdminActivities(adminId);
+  }
+
+  @Delete('activity/:activityId')
+  @UseGuards(AuthGuard)
+  deleteActivity(@Param('activityId', ParseIntPipe) activityId: number) {
+    return this.adminService.deleteAdminActivity(activityId);
   }
 }

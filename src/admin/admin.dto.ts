@@ -5,6 +5,7 @@ import {
   MaxLength,
   IsNotEmpty,
   IsIn,
+  IsEmail,
 } from 'class-validator';
 
 export class AdminDTO {
@@ -23,4 +24,12 @@ export class AdminDTO {
     message: 'Status must be either active or inactive',
   })
   status: string;
+
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
 }
